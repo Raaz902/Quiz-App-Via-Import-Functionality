@@ -1,10 +1,27 @@
-const express = require('express');
+const express = require('express'); // 3306, Admin332@ - MySQL
 const cors = require('cors');
 let mammoth = require('mammoth');
 const multer = require('multer');
 const convertAPI = require('convertapi')('fQuKxYj7Y78ZR6qf')
 const { readFile, writeFileSync  } = require('fs')
 const mongoose = require('mongoose');
+// const mysql = require('mysql');
+const port = 8000;
+// var mysqlConnection = mysql.createConnection({
+//     host: "localhost",
+//     user: "root",
+//     password: "Admin332@"
+// });
+
+// mysqlConnection.connect(function(err) {
+//     if (err) console.log('Error in creating connection', err);
+//     else console.log("Connected successfully");
+// //     mysqlConnection.query("CREATE DATABASE tech-xtend", function (err, result) {
+// //       if (err) console.log('Error in creating database', err);
+// //       else console.log("Database created");
+// //     });
+// });
+
 mongoose.connect('mongodb+srv://mohammadraaz:js0R1WzeupZtwpHE@cluster0.9jttv89.mongodb.net/EcomApp');
 
 const questionSchema = new mongoose.Schema({
@@ -18,7 +35,7 @@ const questionSchema = new mongoose.Schema({
     answer: String,
     explanation: String
 });
-let Question = mongoose.model("Question", questionSchema); 
+let Question = mongoose.model("Question", questionSchema);
 
 const app = express();
 app.use(express.json())
@@ -44,7 +61,6 @@ app.get('/loadQuestions', async (req,res) => {
 })
 
 app.post('/uploadFile', upload.single('questionFile'), async (req, res) => {
-
     convertAPI.convert('html', {
         File: req.file?.path
     }, 'docx').then(async function(result) {
@@ -179,8 +195,8 @@ app.post('/uploadFile', upload.single('questionFile'), async (req, res) => {
     });
     res.status(201).send('File uploaded successfully');
 })
-app.listen(8200, () => {
-    console.log('Listening at port 8200');
+app.listen(port, () => {
+    console.log('Listening at port ',port);
 });
 
 async function saveQuestion(dataToSave) {
