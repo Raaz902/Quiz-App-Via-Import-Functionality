@@ -38,7 +38,7 @@ export default function Quiz({ getMarks ,completed,getLength}) {
 
   function handleNext() {
     // const score = selectedOption === currentQuestion.answer ? 1 : 0;
-    const score =selectedOption.charAt(0) == currentQuestion.answer.charAt(8) ? 1 : 0;
+    const score =selectedOption.charAt(0) === currentQuestion.answer.charAt(8) ? 1 : 0;
     console.log(selectedOption, currentQuestion);
     console.log(selectedOption.charAt(0), currentQuestion.answer.charAt(8));
     getMarks(score);
