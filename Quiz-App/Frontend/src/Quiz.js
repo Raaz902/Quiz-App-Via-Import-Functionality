@@ -2,6 +2,7 @@ import './Quiz.css';
 import { useEffect, useState } from "react";
 // import questions from './questions.json'
 import axios from 'axios';
+import { baseUrl } from './http/http-config';
  
 export default function Quiz({ getMarks ,completed,getLength}) {
   let questions = []
@@ -10,7 +11,7 @@ export default function Quiz({ getMarks ,completed,getLength}) {
   const [QueueQuestion, setQueueQuestion] = useState([...questions]);
   useEffect(()=>{
     getLength(QueueQuestion.length)
-    axios.get('http://localhost:8200/questions').then((result)=>{
+    axios.get(baseUrl+'/questions').then((result)=>{
     console.log(result.data);
     let data = []
     result.data.forEach(element => {
