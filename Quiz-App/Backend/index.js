@@ -8,12 +8,15 @@ const mongoose = require('mongoose');
 mongoose.connect('mongodb+srv://mohammadraaz:js0R1WzeupZtwpHE@cluster0.9jttv89.mongodb.net/EcomApp');
 
 const questionSchema = new mongoose.Schema({
+    section: String,
     question: String,
     optionA: String,
     optionB: String,
     optionC: String,
     optionD: String,
-    answer: String
+    optionE: String,
+    answer: String,
+    explanation: String
 });
 let Question = mongoose.model("Question", questionSchema); 
 
@@ -50,9 +53,14 @@ app.post('/uploadFile', upload.single('questionFile'), async (req, res) => {
         mammoth.convertToHtml({path: req.file?.path})
         .then(async function(result){
             var text = result.value.split('<p>'); 
+            let section = 'A';
             for (let i = 0; i < text.length; i++) {
-                let question, optionA, optionB, optionC, optionD;
+                let question, optionA, optionB, optionC, optionD,optionE,explanation;
                 let line = text[i].split('</p>')[0]
+                if(line.startsWith("<strong>SECTION")){
+                    console.log('logging from section', line.split('<strong>')[1].charAt(8));
+                    section = line.split('<strong>')[1].charAt(8)
+                }
                 if(line.charAt(0)=='Q'){
                     question = line;
                     
@@ -69,8 +77,29 @@ app.post('/uploadFile', upload.single('questionFile'), async (req, res) => {
                             optionB = text[i+2].split('</p>')[0]
                             optionC = text[i+3].split('</p>')[0]
                             optionD = text[i+4].split('</p>')[0]
+                            let dataToSave = {section, question, optionA,  optionB, optionC, optionD, answer}
+
+                            if(text[i+5].split('</p>')[0].startsWith("E)")){
+                                optionE = text[i+5].split('</p>')[0];
+                                answer = text[i+6].split('</p>')[0];
+                                dataToSave = {...dataToSave, optionE, answer}
+    
+                                if(text.length>i+7 && text[i+7].split('</p>')[0].startsWith("Explanation")) {
+                                    explanation = text[i+7].split('</p>')[0];
+                                    dataToSave = {...dataToSave, explanation}
+                                }
+                            } else {
+                                answer = text[i+5].split('</p>')[0];
+                                dataToSave = {...dataToSave, answer}
+    
+                                if(text.length>i+6 && text[i+6].split('</p>')[0].startsWith("Explanation")) {
+                                    explanation = text[i+6].split('</p>')[0];
+                                    dataToSave = {...dataToSave, explanation}
+                                }
+                            }
+
                             answer = text[i+5].split('</p>')[0]
-                            saveQuestion(question, optionA,  optionB, optionC, optionD, answer);
+                            saveQuestion(dataToSave);
                             const buffer = Buffer.from(base64.split(',')[1], "base64");
                             writeFileSync('./question-files/quiz-1/Q2Option1.gif', buffer);
                         })
@@ -93,17 +122,52 @@ app.post('/uploadFile', upload.single('questionFile'), async (req, res) => {
                                 const buffer = Buffer.from(base64.split('base64,')[1], "base64");
                                 writeFileSync('./question-files/quiz-1/Q3Option'+(indx-1)+'.gif', buffer);
                             }
-
-                            answer = text[i+5].split('</p>')[0]
-                            saveQuestion(question, optionA,  optionB, optionC, optionD, answer);
+                            let dataToSave = {section, question, optionA,  optionB, optionC, optionD, answer}
+                            if(text[i+5].split('</p>')[0].startsWith("E)")){
+                                optionE = text[i+5].split('</p>')[0];
+                                answer = text[i+6].split('</p>')[0];
+                                dataToSave = {...dataToSave, optionE, answer}
+    
+                                if(text.length>i+7 && text[i+7].split('</p>')[0].startsWith("Explanation")) {
+                                    explanation = text[i+7].split('</p>')[0];
+                                    dataToSave = {...dataToSave, explanation}
+                                }
+                            } else {
+                                answer = text[i+5].split('</p>')[0];
+                                dataToSave = {...dataToSave, answer}
+    
+                                if(text.length>i+6 && text[i+6].split('</p>')[0].startsWith("Explanation")) {
+                                    explanation = text[i+6].split('</p>')[0];
+                                    dataToSave = {...dataToSave, explanation}
+                                }
+                            }
+                            saveQuestion(dataToSave);
                         })
-                    } else {
+                    } else  {
                         optionA = text[i+1].split('</p>')[0]
                         optionB = text[i+2].split('</p>')[0]
                         optionC = text[i+3].split('</p>')[0]
                         optionD = text[i+4].split('</p>')[0]
-                        answer = text[i+5].split('</p>')[0]
-                        saveQuestion(question, optionA,  optionB, optionC, optionD, answer);
+                        let dataToSave = {section, question, optionA,  optionB, optionC, optionD}
+                        if(text[i+5].split('</p>')[0].startsWith("E)")){
+                            optionE = text[i+5].split('</p>')[0];
+                            answer = text[i+6].split('</p>')[0];
+                            dataToSave = {...dataToSave, optionE, answer}
+
+                            if(text.length>i+7 && text[i+7].split('</p>')[0].startsWith("Explanation")) {
+                                explanation = text[i+7].split('</p>')[0];
+                                dataToSave = {...dataToSave, explanation}
+                            }
+                        } else {
+                            answer = text[i+5].split('</p>')[0];
+                            dataToSave = {...dataToSave, answer}
+
+                            if(text.length>i+6 && text[i+6].split('</p>')[0].startsWith("Explanation")) {
+                                explanation = text[i+6].split('</p>')[0];
+                                dataToSave = {...dataToSave, explanation}
+                            }
+                        }
+                        saveQuestion(dataToSave);
                     }
                 }
             }
@@ -119,10 +183,8 @@ app.listen(8200, () => {
     console.log('Listening at port 8200');
 });
 
-async function saveQuestion(question, optionA,  optionB, optionC, optionD, answer) {
+async function saveQuestion(dataToSave) {
     console.log('Saving...');
-    let dbQuestion = new Question({
-        question, optionA,  optionB, optionC, optionD, answer
-    });
+    let dbQuestion = new Question(dataToSave);
     await dbQuestion.save();
 }
